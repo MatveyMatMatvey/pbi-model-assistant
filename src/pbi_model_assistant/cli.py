@@ -41,13 +41,23 @@ def main() -> None:
     )
 
     print()
-    print(f"Tables: {len(tables)}")
-    print("-" * 50)
+    print(f"Visible tables: {len(tables)}")
+    print("-" * 80)
 
-    for table_name in tables:
-        print(f"- {table_name}")
+    print(
+        f"{'TABLE':<40}"
+        f"{'COLUMNS':>10}"
+        f"{'MEASURES':>12}"
+    )
 
-    print("=" * 50)
+    print("-" * 80)
+
+    for table in tables:
+        print(
+            f"{table['name']:<40}"
+            f"{table['columns']:>10}"
+            f"{table['measures']:>12}"
+        )
 
     input("\nPress Enter to close...")
 

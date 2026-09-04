@@ -35,10 +35,11 @@ def _load_tom():
 def list_tables(
     server_address: str,
     database_name: str,
-) -> list[str]:
+    include_hidden: bool = False,
+) -> list[dict]:
     """
-    Подключается к модели, открытой в Power BI Desktop,
-    и возвращает имена таблиц.
+    Возвращает краткую информацию о таблицах
+    semantic model Power BI.
     """
 
     Server = _load_tom()
@@ -71,10 +72,24 @@ def list_tables(
                 f"Доступные базы: {available}"
             )
 
-        return [
-            str(table.Name)
-            for table in database.Model.Tables
-        ]
+        result = []
+
+        for table in database.Model.Tables:
+            is_hidden = bool(table.IsHidden)
+
+            if not include_hidden and is_hidden:
+                continue
+
+            result.append(
+                {
+                    "name": str(table.Name),
+                    "columns": int(table.Columns.Count),
+                    "measures": int(table.Measures.Count),
+                    "hidden": is_hidden,
+                }
+            )
+
+        return result
 
     finally:
         server.Disconnect()
