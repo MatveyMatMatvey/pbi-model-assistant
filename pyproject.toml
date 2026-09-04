@@ -4,6 +4,12 @@ version = "0.1.0"
 description = "AI-assisted semantic model editor for Power BI Desktop"
 requires-python = ">=3.12"
 
+[project.scripts]
+pbi-model-assistant = "pbi_model_assistant.cli:main"
+
 [build-system]
 requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
