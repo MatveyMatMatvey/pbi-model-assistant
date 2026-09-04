@@ -33,6 +33,7 @@ def main() -> None:
     print(f"Database: {args.database}")
 
     print("=" * 50)
+    input("Press Enter to close...")
 
 
 if __name__ == "__main__":
