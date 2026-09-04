@@ -3,6 +3,9 @@ name = "pbi-model-assistant"
 version = "0.1.0"
 description = "AI-assisted semantic model editor for Power BI Desktop"
 requires-python = ">=3.12"
+dependencies = [
+    "pythonnet>=3.0,<4",
+]
 
 [project.scripts]
 pbi-model-assistant = "pbi_model_assistant.cli:main"

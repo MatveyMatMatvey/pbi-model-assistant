@@ -1,5 +1,5 @@
 import argparse
-
+from pbi_model_assistant.powerbi.tom import list_tables
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
@@ -32,8 +32,24 @@ def main() -> None:
     print(f"Server:   {args.server}")
     print(f"Database: {args.database}")
 
+    print()
+    print("Connecting to Power BI...")
+
+    tables = list_tables(
+        server_address=args.server,
+        database_name=args.database,
+    )
+
+    print()
+    print(f"Tables: {len(tables)}")
+    print("-" * 50)
+
+    for table_name in tables:
+        print(f"- {table_name}")
+
     print("=" * 50)
-    input("Press Enter to close...")
+
+    input("\nPress Enter to close...")
 
 
 if __name__ == "__main__":

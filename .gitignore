@@ -29,3 +29,7 @@ dist/
 # Temporary files
 *.log
 *.tmp
+
+# .NET build artifacts
+dotnet/**/bin/
+dotnet/**/obj/
