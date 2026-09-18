@@ -11,88 +11,80 @@ TOM_PATH = (
 )
 
 def get_table_details(
-        server_address: str,
-        database_name: str,
-        table_name: str,
+    server_address: str,
+    database_name: str,
+    table_name: str,
     ) -> dict:
-        """
-        Возвращает колонки и меры конкретной таблицы Power BI.
-        """
+    """
+    Возвращает колонки и меры конкретной таблицы Power BI.
+    """
 
-        Server = _load_tom()
+    Server = _load_tom()
 
-        server = Server()
-        server.Connect(
-            f"DataSource={server_address}"
+    server = Server()
+    server.Connect(
+        f"DataSource={server_address}"
+    )
+
+    try:
+        database = _get_database(
+            server,
+            database_name,
         )
 
-        try:
-            database = None
+        target_table = None
 
-            for candidate in server.Databases:
-                if (
-                    str(candidate.Name) == database_name
-                    or str(candidate.ID) == database_name
-                ):
-                    database = candidate
-                    break
+        for table in database.Model.Tables:
+            if str(table.Name) == table_name:
+                target_table = table
+                break
 
-            if database is None:
-                raise RuntimeError(
-                    f"Semantic model '{database_name}' не найдена."
-                )
+        if target_table is None:
+            available_tables = [
+                str(table.Name)
+                for table in database.Model.Tables
+                if not bool(table.IsHidden)
+            ]
 
-            target_table = None
+            raise RuntimeError(
+                f"Таблица '{table_name}' не найдена. "
+                f"Доступные таблицы: {available_tables}"
+            )
 
-            for table in database.Model.Tables:
-                if str(table.Name) == table_name:
-                    target_table = table
-                    break
+        columns = []
 
-            if target_table is None:
-                available_tables = [
-                    str(table.Name)
-                    for table in database.Model.Tables
-                    if not bool(table.IsHidden)
-                ]
+        for column in target_table.Columns:
+            columns.append(
+                {
+                    "name": str(column.Name),
+                    "data_type": str(column.DataType),
+                    "hidden": bool(column.IsHidden),
+                }
+            )
 
-                raise RuntimeError(
-                    f"Таблица '{table_name}' не найдена.\n"
-                    f"Доступные таблицы: {available_tables}"
-                )
+        measures = []
 
-            columns = []
+        for measure in target_table.Measures:
+            measures.append(
+                {
+                    "name": str(measure.Name),
+                    "expression": str(measure.Expression),
+                    "format_string": str(
+                        measure.FormatString or ""
+                    ),
+                    "hidden": bool(measure.IsHidden),
+                }
+            )
 
-            for column in target_table.Columns:
-                columns.append(
-                    {
-                        "name": str(column.Name),
-                        "data_type": str(column.DataType),
-                        "hidden": bool(column.IsHidden),
-                    }
-                )
+        return {
+            "name": str(target_table.Name),
+            "hidden": bool(target_table.IsHidden),
+            "columns": columns,
+            "measures": measures,
+        }
 
-            measures = []
-
-            for measure in target_table.Measures:
-                measures.append(
-                    {
-                        "name": str(measure.Name),
-                        "expression": str(measure.Expression),
-                        "format_string": str(measure.FormatString or ""),
-                        "hidden": bool(measure.IsHidden),
-                    }
-                )
-
-            return {
-                "name": str(target_table.Name),
-                "hidden": bool(target_table.IsHidden),
-                "columns": columns,
-                "measures": measures,
-            }
-
-        finally:
-            server.Disconnect()
+    finally:
+        server.Disconnect()
 
 def _load_tom():
     """
@@ -115,6 +107,38 @@ def _load_tom():
     return Server
 
 
+def _get_database(server, database_name: str):
+    """
+    Находит semantic model внутри локального Power BI server.
+
+    1. Сначала ищет точное совпадение Name или ID.
+    2. Если база на локальном server только одна —
+       использует её автоматически.
+    """
+
+    databases = list(server.Databases)
+
+    for database in databases:
+        if (
+            str(database.Name) == database_name
+            or str(database.ID) == database_name
+        ):
+            return database
+
+    if len(databases) == 1:
+        return databases[0]
+
+    available = [
+        f"{database.Name} ({database.ID})"
+        for database in databases
+    ]
+
+    raise RuntimeError(
+        f"Semantic model '{database_name}' не найдена. "
+        f"Доступные базы: {available}"
+    )
+
+
 def list_tables(
     server_address: str,
     database_name: str,
@@ -134,25 +158,9 @@ def list_tables(
     )
 
     try:
-        database = None
-
-        for candidate in server.Databases:
-            if (
-                str(candidate.Name) == database_name
-                or str(candidate.ID) == database_name
-            ):
-                database = candidate
-                break
-
-        if database is None:
-            available = [
-                f"{db.Name} ({db.ID})"
-                for db in server.Databases
-            ]
-
-            raise RuntimeError(
-                "Не удалось найти semantic model. "
-                f"Доступные базы: {available}"
+        database = _get_database(
+                server,
+                database_name,
             )
 
         result = []
@@ -193,20 +201,10 @@ def get_relationships(
     )
 
     try:
-        database = None
-
-        for candidate in server.Databases:
-            if (
-                str(candidate.Name) == database_name
-                or str(candidate.ID) == database_name
-            ):
-                database = candidate
-                break
-
-        if database is None:
-            raise RuntimeError(
-                f"Semantic model '{database_name}' не найдена."
-            )
+        database = _get_database(
+            server,
+            database_name,
+        )
 
         result = []
 
@@ -259,26 +257,10 @@ def create_measure(
     )
 
     try:
-        database = None
-
-        for candidate in server.Databases:
-            if (
-                str(candidate.Name) == database_name
-                or str(candidate.ID) == database_name
-            ):
-                database = candidate
-                break
-
-        if database is None:
-            available_databases = [
-                f"{candidate.Name} ({candidate.ID})"
-                for candidate in server.Databases
-            ]
-
-            raise RuntimeError(
-                f"Semantic model '{database_name}' не найдена. "
-                f"Доступные базы: {available_databases}"
-            )
+        database = _get_database(
+            server,
+            database_name,
+        )
 
         target_table = None
 

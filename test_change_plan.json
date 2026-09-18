@@ -1,0 +1,11 @@
+{
+  "actions": [
+    {
+      "type": "create_measure",
+      "table": "Measures NewB",
+      "name": "ChangePlan Test",
+      "expression": "42",
+      "format_string": "0"
+    }
+  ]
+}

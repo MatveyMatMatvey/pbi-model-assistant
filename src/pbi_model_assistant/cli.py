@@ -6,6 +6,9 @@ from pbi_model_assistant.powerbi.tom import (
     get_table_details,
     list_tables,
 )
+from pbi_model_assistant.powerbi.writer import (
+    apply_change_plan,
+)
 from pbi_model_assistant.model.snapshot import build_model_snapshot
 
 def build_parser() -> argparse.ArgumentParser:
@@ -23,6 +26,12 @@ def build_parser() -> argparse.ArgumentParser:
         "--database",
         required=True,
         help="Power BI semantic model database name",
+    )
+    
+    parser.add_argument(
+        "--apply-plan",
+        required=False,
+        help="Apply ChangePlan JSON to Power BI",
     )
 
     parser.add_argument(
@@ -85,7 +94,29 @@ def main() -> None:
     print("Connecting to Power BI...")
     print()
 
-    if args.create_measure:
+    if args.apply_plan:
+        with open(
+            args.apply_plan,
+            "r",
+            encoding="utf-8",
+        ) as file:
+            plan = json.load(file)
+
+        print(
+            f"Applying ChangePlan: {args.apply_plan}"
+        )
+
+        apply_change_plan(
+            server_address=args.server,
+            database_name=args.database,
+            plan=plan,
+        )
+
+        print(
+            f"Applied {len(plan['actions'])} action(s)."
+        )
+
+    elif args.create_measure:
         if not args.table:
             raise RuntimeError(
                 "--table is required with --create-measure"

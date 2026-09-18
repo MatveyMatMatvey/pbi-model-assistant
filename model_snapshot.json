@@ -1,5 +1,5 @@
 {
-  "database": "45726db6-0ad1-4a2e-9c3c-8e8cd1f99939",
+  "database": "10258f2d-9dff-471e-ac49-ff16adfa1a5b",
   "tables": [
     {
       "name": "mango_ish_vizovi",
@@ -3588,6 +3588,18 @@
           "name": "Встречи с рефералами",
           "expression": "\nVAR start_date = MIN('Calendar'[Date])\nVAR end_date = MAX('Calendar'[Date])\nRETURN\nCALCULATE(\n    SUM('НС Ежедневный отчёт'[fact_value]),\n    FILTER(\n        'НС Ежедневный отчёт',\n        'НС Ежедневный отчёт'[report_date] >= start_date &&\n        'НС Ежедневный отчёт'[report_date] <= end_date &&\n        'НС Ежедневный отчёт'[metric_name] IN {\n            \"Встреч с реф\"\n        }\n    )\n)",
           "format_string": "0",
+          "hidden": false
+        },
+        {
+          "name": "PBI Assistant Test",
+          "expression": "1",
+          "format_string": "",
+          "hidden": false
+        },
+        {
+          "name": "Database Fallback Test",
+          "expression": "1",
+          "format_string": "",
           "hidden": false
         }
       ]
